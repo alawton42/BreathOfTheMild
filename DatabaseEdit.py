@@ -72,7 +72,7 @@ class DatabaseEditFrame(tk.Frame):
                 last_row_of_table = i + 1
                 for j, col in enumerate(row):
                     entry = Entry(self, width=15)
-                    entry.insert(END, table_contents[i][j])
+                    entry.insert(END, str(table_contents[i][j]))
                     entry.grid(row=i + 1, column=j + 1)
                     table_row.append(entry)
                 self.table.append(table_row)
