@@ -45,7 +45,7 @@ class loginFrame(tk.Frame):
             output_msg = "Connection to MySQL DB successful"
             print(connection)
             self.controller.set_connection(connection)
-            self.controller.show_frame("DatabaseEditFrame")
+            self.controller.show_frame("DatabaseSelectionFrame")
         except Error as e:
             print(f"The error '{e}' occurred")
 

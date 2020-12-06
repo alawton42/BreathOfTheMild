@@ -1,19 +1,21 @@
 import tkinter as tk
 import login
 import DatabaseEdit
+import DatabaseSelection
 
 
 class MainFrame(tk.Frame):
 
     def __init__(self, parent):
         self._connection = None
+        self._current_table = None
         tk.Frame.__init__(self, parent, bg="#666666", width=500, height=500)
         container = tk.Frame(self)
         container.place(relwidth=.98, relheight=.98, relx=.01, rely=.01)
         #         container.pack(expand=True)
 
         self.frames = {}
-        for F in (Index, login.loginFrame, DUMMY, DatabaseEdit.DatabaseEditFrame):
+        for F in (Index, login.loginFrame, DUMMY, DatabaseEdit.DatabaseEditFrame, DatabaseSelection.DatabaseSelectionFrame):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
 
@@ -26,6 +28,8 @@ class MainFrame(tk.Frame):
         frame = self.frames[page_name]
         if page_name == "DatabaseEditFrame":
             frame.create_table()
+        if page_name == "DatabaseSelectionFrame":
+            frame.create_buttons()
         if (page_name == "DUMMY"):
             frame.check_connection()
         frame.tkraise()
@@ -36,6 +40,12 @@ class MainFrame(tk.Frame):
 
     def get_connection(self):
         return self._connection
+
+    def set_current_table(self, table_name):
+        self._current_table = table_name
+
+    def get_current_table(self):
+        return self._current_table
 
 
 class Index(tk.Frame):
