@@ -10,7 +10,6 @@ class DatabaseEditFrame(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-
         self.current_table = None
         self.headers = []
         self.table = []
@@ -33,8 +32,8 @@ class DatabaseEditFrame(tk.Frame):
         except Error as e:
             # ignore the no result set to fetch because it happens every update
             if e != 'No result set to fetch from.':
-                print(f"The error '{e}' occurred")
-                self.error.config(text=f"The error '{e}' occurred")
+                self.error.config(text="An Error has occured.\nIf you would like more information, please view the terminal.")
+                self.error.config(text=e)
 
     def execute_query(self, connection, query):
         cursor = connection.cursor()
@@ -45,7 +44,7 @@ class DatabaseEditFrame(tk.Frame):
             # ignore the no result set to fetch because it happens every update
             if e != 'No result set to fetch from.':
                 print(f"The error '{e}' occurred")
-                self.error.config(text=f"The error '{e}' occurred")
+                self.error.config(text="An Error has occured.\nIf you would like more information, please view the terminal.")
 
     def get_frame(self):
         return self.frame
@@ -89,11 +88,12 @@ class DatabaseEditFrame(tk.Frame):
                 button.grid(row=i + 1, column=0)
                 table_row.append(button)
                 last_row_of_table = i + 1
+                # Display data from the table
                 for j, col in enumerate(row):
                     if j == 0:
                         entry = Label(self, text=str(table_contents[i][j]))
                     else:
-                        entry = Entry(self, width=15)
+                        entry = Entry(self, width=10)
                         entry.insert(END, str(table_contents[i][j]))
                     entry.grid(row=i + 1, column=j + 1)
                     table_row.append(entry)
@@ -102,7 +102,7 @@ class DatabaseEditFrame(tk.Frame):
             # Form to insert a new row into the table
             field_values = []
             for i, field in enumerate(fields_list):
-                field_value = Entry(self, width=15)
+                field_value = Entry(self, width=10)
                 field_value.grid(row=last_row_of_table + 1, column=i + 1)
                 field_values.append(field_value)
                 self.insert_components.append(field_value)
@@ -158,24 +158,24 @@ class DatabaseEditFrame(tk.Frame):
         for i, row in enumerate(self.table):
             if table_name == "Location":
                 query = f"UPDATE Location " \
-                        f"SET {self.field_names[0]} = {int(self.table[i][1].get())}, " \
+                        f"SET {self.field_names[0]} = {int(self.table[i][1].cget('text'))}, " \
                         f"{self.field_names[1]} = \"{self.table[i][2].get()}\", " \
                         f"{self.field_names[2]} = {int(self.table[i][3].get())} "\
-                        f"WHERE {self.field_names[0]} = {self.table[i][1].get()}"
+                        f"WHERE {self.field_names[0]} = {self.table[i][1].cget('text')}"
             elif table_name == "DwellsIn":
                 query = f"UPDATE DwellsIn " \
-                        f"SET {self.field_names[0]} = {int(self.table[i][1].get())}, " \
+                        f"SET {self.field_names[0]} = {int(self.table[i][1].cget('text'))}, " \
                         f"{self.field_names[1]} = {int(self.table[i][2].get())} "\
-                        f"WHERE {self.field_names[0]} = {self.table[i][1].get()}"
+                        f"WHERE {self.field_names[0]} = {self.table[i][1].cget('text')}"
             elif table_name == "Item":
                 query = f"UPDATE Item " \
-                        f"SET {self.field_names[0]} = {int(self.table[i][1].get())}, " \
+                        f"SET {self.field_names[0]} = {int(self.table[i][1].cget('text'))}, " \
                         f"{self.field_names[1]} = {self.table[i][2].get()}, " \
                         f"{self.field_names[2]} = \"{self.table[i][3].get()}\", " \
                         f"{self.field_names[3]} = \"{self.table[i][4].get()}\", " \
                         f"{self.field_names[4]} = \"{self.table[i][5].get()}\", "
                 if self.table[i][6].get() == "None" or self.table[i][6].get() == "NULL":
-                     query += f"{self.field_names[5]} = NULL, "
+                    query += f"{self.field_names[5]} = NULL, "
                 else:
                     query += f"{self.field_names[5]} = {self.table[i][6].get()}, "
 
@@ -189,39 +189,39 @@ class DatabaseEditFrame(tk.Frame):
                 else:
                     query += f"{self.field_names[7]} = \"{self.table[i][8].get()}\" "
 
-                query += f"WHERE {self.field_names[0]} = {self.table[i][1].get()}"
+                query += f"WHERE {self.field_names[0]} = {self.table[i][1].cget('text')}"
             elif table_name == "Mob":
                 query = f"UPDATE Mob " \
-                        f"SET {self.field_names[0]} = {int(self.table[i][1].get())}, " \
+                        f"SET {self.field_names[0]} = {int(self.table[i][1].cget('text'))}, " \
                         f"{self.field_names[1]} = \"{self.table[i][2].get()}\", " \
                         f"{self.field_names[2]} = {self.table[i][3].get()}, " \
                         f"{self.field_names[3]} = {self.table[i][4].get()} "\
-                        f"WHERE {self.field_names[0]} = {self.table[i][1].get()}"
+                        f"WHERE {self.field_names[0]} = {self.table[i][1].cget('text')}"
             elif table_name == "NPC":
                 query = f"UPDATE NPC " \
-                        f"SET {self.field_names[0]} = {int(self.table[i][1].get())}, " \
+                        f"SET {self.field_names[0]} = {int(self.table[i][1].cget('text'))}, " \
                         f"{self.field_names[1]} = \"{self.table[i][2].get()}\", " \
                         f"{self.field_names[2]} = {self.table[i][3].get()} "\
-                        f"WHERE {self.field_names[0]} = {self.table[i][1].get()}"
+                        f"WHERE {self.field_names[0]} = {self.table[i][1].cget('text')}"
             elif table_name == "NPCDialogue":
                 query = f"UPDATE NPCDialogue " \
-                        f"SET {self.field_names[0]} = {int(self.table[i][1].get())}, " \
+                        f"SET {self.field_names[0]} = {int(self.table[i][1].cget('text'))}, " \
                         f"{self.field_names[1]} = \"{self.table[i][2].get()}\" "\
-                        f"WHERE {self.field_names[0]} = {self.table[i][1].get()}"
+                        f"WHERE {self.field_names[0]} = {self.table[i][1].cget('text')}"
             elif table_name == "NPCQuest":
                 query = f"UPDATE NPCQuest " \
-                        f"SET {self.field_names[0]} = {int(self.table[i][1].get())}, " \
+                        f"SET {self.field_names[0]} = {int(self.table[i][1].cget('text'))}, " \
                         f"{self.field_names[1]} = \"{self.table[i][2].get()}\" "\
-                        f"WHERE {self.field_names[0]} = {self.table[i][1].get()}"
+                        f"WHERE {self.field_names[0]} = {self.table[i][1].cget('text')}"
             elif table_name == "PlayerAccount":
                 query = f"UPDATE PlayerAccount " \
-                        f"SET {self.field_names[0]} = \"{self.table[i][1].get()}\", " \
+                        f"SET {self.field_names[0]} = \"{self.table[i][1].cget('text')}\", " \
                         f"{self.field_names[1]} = \"{self.table[i][2].get()}\", " \
                         f"{self.field_names[2]} = \"{self.table[i][3].get()}\" "\
-                        f"WHERE {self.field_names[0]} = \"{self.table[i][1].get()}\""
+                        f"WHERE {self.field_names[0]} = \"{self.table[i][1].cget('text')}\""
             elif table_name == "PlayerCharacter":
                 query = f"UPDATE PlayerCharacter " \
-                        f"SET {self.field_names[0]} = \"{self.table[i][1].get()}\", " \
+                        f"SET {self.field_names[0]} = \"{self.table[i][1].cget('text')}\", " \
                         f"{self.field_names[1]} = {self.table[i][2].get()}, " \
                         f"{self.field_names[2]} = {self.table[i][3].get()}, " \
                         f"{self.field_names[3]} = \"{self.table[i][4].get()}\", "
@@ -231,19 +231,18 @@ class DatabaseEditFrame(tk.Frame):
                     query += f"{self.field_names[4]} = {self.table[i][5].get()}, "
                 query += f"{self.field_names[5]} = \"{self.table[i][6].get()}\", " \
                          f"{self.field_names[6]} = {self.table[i][7].get()} "\
-                         f"WHERE {self.field_names[0]} = \"{self.table[i][1].get()}\""
+                         f"WHERE {self.field_names[0]} = \"{self.table[i][1].cget('text')}\""
             elif table_name == "Server":
                 query = f"UPDATE Server " \
-                        f"SET {self.field_names[0]} = {int(self.table[i][1].get())}, " \
+                        f"SET {self.field_names[0]} = {int(self.table[i][1].cget('text'))}, " \
                         f"{self.field_names[1]} = \"{self.table[i][2].get()}\", " \
                         f"{self.field_names[2]} = {self.table[i][3].get()} "\
-                        f"WHERE {self.field_names[0]} = {self.table[i][1].get()}"
+                        f"WHERE {self.field_names[0]} = {self.table[i][1].cget('text')}"
             elif table_name == "Shop":
                 query = f"UPDATE Shop " \
-                        f"SET {self.field_names[0]} = {int(self.table[i][1].get())}, " \
+                        f"SET {self.field_names[0]} = {int(self.table[i][1].cget('text'))}, " \
                         f"{self.field_names[1]} = \"{self.table[i][2].get()}\", " \
                         f"{self.field_names[2]} = \"{self.table[i][3].get()}\" "\
-                        f"WHERE {self.field_names[0]} = {self.table[i][1].get()}"
+                        f"WHERE {self.field_names[0]} = {self.table[i][1].cget('text')}"
             self.execute_query(self.controller.get_connection(), query)
-            print(query)
         self.create_table()
