@@ -11,6 +11,7 @@ class DatabaseEditFrame(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
         self.current_table = None
+        self.headers = []
         self.table = []
         self.insert_components = []
         self.field_names = []
@@ -18,6 +19,9 @@ class DatabaseEditFrame(tk.Frame):
         self.place(relwidth=0.8, relheight=0.8, relx=0.1, rely=0.1)
         self.error = Label(self, text="")
 
+    """
+    This is where all mySQL Commands are used
+    """
     def execute_read_query(self, connection, query):
         cursor = connection.cursor()
         result = None
@@ -26,8 +30,10 @@ class DatabaseEditFrame(tk.Frame):
             result = cursor.fetchall()
             return result
         except Error as e:
-            print(f"The error '{e}' occurred")
-            self.error.config(text=f"The error '{e}' occurred")
+            # ignore the no result set to fetch because it happens every update
+            if e != 'No result set to fetch from.':
+                print(f"The error '{e}' occurred")
+                self.error.config(text=f"The error '{e}' occurred")
 
     def execute_query(self, connection, query):
         cursor = connection.cursor()
@@ -35,13 +41,21 @@ class DatabaseEditFrame(tk.Frame):
         try:
             cursor.execute(query)
         except Error as e:
+            # ignore the no result set to fetch because it happens every update
             if e != 'No result set to fetch from.':
+                print(f"The error '{e}' occurred")
                 self.error.config(text=f"The error '{e}' occurred")
 
     def get_frame(self):
         return self.frame
 
+    """
+    Bulk of the display set up and update are found here
+    """
     def create_table(self):
+        # Clear all previous headers, data, buttons, etc.
+        for header in self.headers:
+            header.destroy()
         for row in self.table:
             for row_component in row:
                 row_component.destroy()
@@ -50,21 +64,25 @@ class DatabaseEditFrame(tk.Frame):
         for button in self.extra_buttons:
             button.destroy()
 
+        # Almost everything on the page required connection to the database, so always check for it
         if self.controller.get_connection() is not None:
-
             self.current_table = self.controller.get_current_table()
 
+            # Get and display the field names of the selected table
             fields_list = self.execute_read_query(self.controller.get_connection(), "SHOW COLUMNS IN " + self.current_table)
             for i, field in enumerate(fields_list):
                 field_label = Label(self, text=field[0])
                 field_label.grid(row=0, column=i + 1)
                 self.field_names.append(field[0])
+                self.headers.append(field_label)
 
+            # Get and display all data of the selected table with editable entry boxes
             table_contents = self.execute_read_query(self.controller.get_connection(), "SELECT * FROM " + self.current_table)
             last_row_of_table = 0
             self.table = []
             for i, row in enumerate(table_contents):
                 table_row = []
+                # Delete Button for each row
                 button = Button(self, text="Delete row",
                                 command=partial(self.delete_row, fields_list[0][0], table_contents[i][0]))
                 button.grid(row=i + 1, column=0)
@@ -77,6 +95,7 @@ class DatabaseEditFrame(tk.Frame):
                     table_row.append(entry)
                 self.table.append(table_row)
 
+            # Form to insert a new row into the table
             field_values = []
             for i, field in enumerate(fields_list):
                 field_value = Entry(self, width=15)
@@ -88,16 +107,19 @@ class DatabaseEditFrame(tk.Frame):
             button.grid(row=last_row_of_table + 1, column=0)
             self.insert_components.append(button)
 
-            # blank_space = Label(self, text="   ")
-            # blank_space.grid(row=last_row_of_table + 2, column=2)
-
+            # Button to update the table with the new text entered into the entry boxes
             update_button = Button(self, text="Update Table", command=self.update_table)
             update_button.grid(row=last_row_of_table + 3, column=1)
+            # Button that leads to the the display functions page
             functions_button = Button(self, text="Display Functions", command=lambda: self.controller.show_frame("Index"))
             functions_button.grid(row=last_row_of_table + 3, column=3)
             self.extra_buttons = [update_button, functions_button]
             self.error.grid(row=last_row_of_table + 2, column=0, columnspan=5)
 
+    """
+    "Delete row" buttons trigger this method.
+    Deletes row of the table that corresponds to the button clicked.
+    """
     def delete_row(self, primary_key, primary_key_value):
         self.error.config(text="")
         print(primary_key)
@@ -105,6 +127,10 @@ class DatabaseEditFrame(tk.Frame):
         print(self.execute_read_query(self.controller.get_connection(), "SELECT * FROM " + self.current_table))
         self.create_table()
 
+    """
+    "Add row" button triggers this method.
+    Adds data that was entered in the entry boxes to the right of the button to the table.
+    """
     def insert_row(self, field_values):
         self.error.config(text="")
         values = ""
@@ -116,6 +142,11 @@ class DatabaseEditFrame(tk.Frame):
                                 "INSERT INTO " + self.current_table + " VALUES (" + values + ")")
         self.create_table()
 
+    """
+    "Update" button triggers this method
+    Updates every row in the table with the text found in the entry boxes of the table.
+    Every table must have different update query set up due to difference in data types.
+    """
     def update_table(self):
         self.error.config(text="")
         table_name = self.current_table
@@ -138,11 +169,23 @@ class DatabaseEditFrame(tk.Frame):
                         f"{self.field_names[1]} = {self.table[i][2].get()}, " \
                         f"{self.field_names[2]} = \"{self.table[i][3].get()}\", " \
                         f"{self.field_names[3]} = \"{self.table[i][4].get()}\", " \
-                        f"{self.field_names[4]} = \"{self.table[i][5].get()}\", " \
-                        f"{self.field_names[5]} = {self.table[i][6].get()}, " \
-                        f"{self.field_names[6]} = {self.table[i][7].get()}, " \
-                        f"{self.field_names[7]} = \"{self.table[i][8].get()}\" "\
-                        f"WHERE {self.field_names[0]} = {self.table[i][1].get()}"
+                        f"{self.field_names[4]} = \"{self.table[i][5].get()}\", "
+                if self.table[i][6].get() == "None" or self.table[i][6].get() == "NULL":
+                     query += f"{self.field_names[5]} = NULL, "
+                else:
+                    query += f"{self.field_names[5]} = {self.table[i][6].get()}, "
+
+                if self.table[i][7].get() == "None" or self.table[i][7].get() == "NULL":
+                    query += f"{self.field_names[6]} = NULL, "
+                else:
+                    query += f"{self.field_names[6]} = {self.table[i][7].get()}, "
+
+                if self.table[i][8].get() == "None" or self.table[i][8].get() == "NULL":
+                    query += f"{self.field_names[7]} = NULL "
+                else:
+                    query += f"{self.field_names[7]} = \"{self.table[i][8].get()}\" "
+
+                query += f"WHERE {self.field_names[0]} = {self.table[i][1].get()}"
             elif table_name == "Mob":
                 query = f"UPDATE Mob " \
                         f"SET {self.field_names[0]} = {int(self.table[i][1].get())}, " \
@@ -177,11 +220,14 @@ class DatabaseEditFrame(tk.Frame):
                         f"SET {self.field_names[0]} = \"{self.table[i][1].get()}\", " \
                         f"{self.field_names[1]} = {self.table[i][2].get()}, " \
                         f"{self.field_names[2]} = {self.table[i][3].get()}, " \
-                        f"{self.field_names[3]} = \"{self.table[i][4].get()}\", " \
-                        f"{self.field_names[4]} = {self.table[i][5].get()}, " \
-                        f"{self.field_names[5]} = \"{self.table[i][6].get()}\", " \
-                        f"{self.field_names[6]} = {self.table[i][7].get()} "\
-                        f"WHERE {self.field_names[0]} = \"{self.table[i][1].get()}\""
+                        f"{self.field_names[3]} = \"{self.table[i][4].get()}\", "
+                if self.table[i][5].get() == "None" or self.table[i][5].get() == "NULL":
+                    query += f"{self.field_names[4]} = NULL, "
+                else:
+                    query += f"{self.field_names[4]} = {self.table[i][5].get()}, "
+                query += f"{self.field_names[5]} = \"{self.table[i][6].get()}\", " \
+                         f"{self.field_names[6]} = {self.table[i][7].get()} "\
+                         f"WHERE {self.field_names[0]} = \"{self.table[i][1].get()}\""
             elif table_name == "Server":
                 query = f"UPDATE Server " \
                         f"SET {self.field_names[0]} = {int(self.table[i][1].get())}, " \
