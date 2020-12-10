@@ -10,6 +10,7 @@ class DatabaseEditFrame(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
+
         self.current_table = None
         self.headers = []
         self.table = []
@@ -89,8 +90,11 @@ class DatabaseEditFrame(tk.Frame):
                 table_row.append(button)
                 last_row_of_table = i + 1
                 for j, col in enumerate(row):
-                    entry = Entry(self, width=15)
-                    entry.insert(END, str(table_contents[i][j]))
+                    if j == 0:
+                        entry = Label(self, text=str(table_contents[i][j]))
+                    else:
+                        entry = Entry(self, width=15)
+                        entry.insert(END, str(table_contents[i][j]))
                     entry.grid(row=i + 1, column=j + 1)
                     table_row.append(entry)
                 self.table.append(table_row)
