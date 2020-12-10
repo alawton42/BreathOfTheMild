@@ -31,10 +31,13 @@ class DatabaseEditFrame(tk.Frame):
             return result
         except Error as e:
             # ignore the no result set to fetch because it happens every update
-            if e != 'No result set to fetch from.':
+            if e.msg != 'No result set to fetch from.':
                 print(f"The error '{e}' occurred")
                 self.error.config(text="An Error has occured.\nIf you would like more information, please view the terminal.")
 
+    """
+    This is where all mySQL Commands are used
+    """
     def execute_query(self, connection, query):
         cursor = connection.cursor()
         result = None
@@ -42,7 +45,7 @@ class DatabaseEditFrame(tk.Frame):
             cursor.execute(query)
         except Error as e:
             # ignore the no result set to fetch because it happens every update
-            if e != 'No result set to fetch from.':
+            if e.msg != 'No result set to fetch from.':
                 print(f"The error '{e}' occurred")
                 self.error.config(text="An Error has occured.\nIf you would like more information, please view the terminal.")
 
@@ -127,9 +130,13 @@ class DatabaseEditFrame(tk.Frame):
     """
     def delete_row(self, primary_key, primary_key_value):
         self.error.config(text="")
-        print(primary_key)
-        self.execute_read_query(self.controller.get_connection(), "DELETE FROM " + self.current_table + " WHERE " + primary_key + " = " + str(primary_key_value))
-        print(self.execute_read_query(self.controller.get_connection(), "SELECT * FROM " + self.current_table))
+        # Check if Primary key is a string
+        if self.controller.get_current_table() == "PlayerAccount" or self.controller.get_current_table() == "PlayerCharacter":
+            self.execute_read_query(self.controller.get_connection(),
+                                    "DELETE FROM " + self.current_table + " WHERE " + primary_key + " = \"" + str(
+                                        primary_key_value) + "\"")
+        else:
+            self.execute_read_query(self.controller.get_connection(), "DELETE FROM " + self.current_table + " WHERE " + primary_key + " = " + str(primary_key_value))
         self.create_table()
 
     """
@@ -172,6 +179,7 @@ class DatabaseEditFrame(tk.Frame):
                         f"{self.field_names[1]} = {int(self.table[i][2].get())} "\
                         f"WHERE {self.field_names[0]} = {self.table[i][1].cget('text')}"
             elif table_name == "Item":
+                counter = 0
                 query = f"UPDATE Item " \
                         f"SET {self.field_names[0]} = {int(self.table[i][1].cget('text'))}, " \
                         f"{self.field_names[1]} = {self.table[i][2].get()}, " \
@@ -182,18 +190,33 @@ class DatabaseEditFrame(tk.Frame):
                     query += f"{self.field_names[5]} = NULL, "
                 else:
                     query += f"{self.field_names[5]} = {self.table[i][6].get()}, "
+                    counter += 1
 
                 if self.table[i][7].get() == "None" or self.table[i][7].get() == "NULL":
                     query += f"{self.field_names[6]} = NULL, "
                 else:
                     query += f"{self.field_names[6]} = {self.table[i][7].get()}, "
+                    counter += 1
 
                 if self.table[i][8].get() == "None" or self.table[i][8].get() == "NULL":
                     query += f"{self.field_names[7]} = NULL "
                 else:
                     query += f"{self.field_names[7]} = \"{self.table[i][8].get()}\" "
+                    counter += 1
 
                 query += f"WHERE {self.field_names[0]} = {self.table[i][1].cget('text')}"
+
+                if counter > 1:
+                    self.error.config(
+                        text="Error: An item an only exist in one place.")
+                    continue
+                elif counter == 0:
+                    self.error.config(
+                        text="Error: An item must exist in a place. Item will be deleted.")
+                    self.execute_read_query(self.controller.get_connection(),
+                                            "DELETE FROM " + self.current_table + " WHERE " + self.field_names[0] + " = " + self.table[i][1].cget('text'))
+                    continue
+
             elif table_name == "Mob":
                 query = f"UPDATE Mob " \
                         f"SET {self.field_names[0]} = {int(self.table[i][1].cget('text'))}, " \
@@ -216,7 +239,8 @@ class DatabaseEditFrame(tk.Frame):
                 query = f"UPDATE NPCQuest " \
                         f"SET {self.field_names[0]} = {int(self.table[i][1].cget('text'))}, " \
                         f"{self.field_names[1]} = \"{self.table[i][2].get()}\" "\
-                        f"WHERE {self.field_names[0]} = {self.table[i][1].cget('text')}"
+                        f"WHERE {self.field_names[0]} = {self.table[i][1].cget('text')} " \
+                        f"AND {self.field_names[1]} = \"{self.table[i][2].get()}\""
             elif table_name == "PlayerAccount":
                 query = f"UPDATE PlayerAccount " \
                         f"SET {self.field_names[0]} = \"{self.table[i][1].cget('text')}\", " \
