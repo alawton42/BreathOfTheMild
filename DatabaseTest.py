@@ -6,10 +6,19 @@ import DatabaseSelection
 
 class MainFrame(tk.Frame):
 
-    def __init__(self, parent):
+    def __init__(self):
+
+        self.root = tk.Tk()
+        self.root.geometry("700x500")
+        self.root.title("Breath of the Mild")
+
+        upperFrame = tk.Frame(self.root, background="#999999")
+        upperFrame.place(relwidth=1, relheight=0.3)
+
+
         self._connection = None
         self._current_table = None
-        tk.Frame.__init__(self, parent, bg="#666666", width=500, height=500)
+        tk.Frame.__init__(self, bg="#666666", width=500, height=500)
         container = tk.Frame(self)
         container.place(relwidth=.98, relheight=.98, relx=.01, rely=.01)
         #         container.pack(expand=True)
@@ -26,7 +35,10 @@ class MainFrame(tk.Frame):
 
     def show_frame(self, page_name):
         frame = self.frames[page_name]
+        if page_name != "DatabaseEditFrame":
+            self.root.geometry("700x500")
         if page_name == "DatabaseEditFrame":
+            self.root.geometry("1200x700")
             frame.create_table()
         if page_name == "DatabaseSelectionFrame":
             frame.create_buttons()
@@ -46,6 +58,9 @@ class MainFrame(tk.Frame):
 
     def get_current_table(self):
         return self._current_table
+
+    def get_root(self):
+        return self.root
 
 
 class Index(tk.Frame):
@@ -77,16 +92,10 @@ class DUMMY(tk.Frame):
         print(self.controller.get_connection())
 
 
-root = tk.Tk()
-root.geometry("700x500")
-root.title("Breath of the Mild")
 
-upperFrame = tk.Frame(root, background="#999999")
-upperFrame.place(relwidth=1, relheight=0.3)
-mainFrame = MainFrame(root)
-
-mainFrame.place(relwidth=1, relheight=.7, relx=0, rely=.3)
 # mainFrame.pack(pady=200)
 # mainFrame.place(relx=.5, rely=.8)
 if __name__ == "__main__":
-    root.mainloop()
+    mainFrame = MainFrame()
+    mainFrame.place(relwidth=1, relheight=.7, relx=0, rely=.3)
+    mainFrame.get_root().mainloop()

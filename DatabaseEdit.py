@@ -32,8 +32,8 @@ class DatabaseEditFrame(tk.Frame):
         except Error as e:
             # ignore the no result set to fetch because it happens every update
             if e != 'No result set to fetch from.':
+                print(f"The error '{e}' occurred")
                 self.error.config(text="An Error has occured.\nIf you would like more information, please view the terminal.")
-                self.error.config(text=e)
 
     def execute_query(self, connection, query):
         cursor = connection.cursor()
@@ -119,6 +119,7 @@ class DatabaseEditFrame(tk.Frame):
             functions_button.grid(row=last_row_of_table + 3, column=3)
             self.extra_buttons = [update_button, functions_button]
             self.error.grid(row=last_row_of_table + 2, column=0, columnspan=5)
+            self.controller.get_connection().commit()
 
     """
     "Delete row" buttons trigger this method.
@@ -139,7 +140,10 @@ class DatabaseEditFrame(tk.Frame):
         self.error.config(text="")
         values = ""
         for val in field_values:
-            values += "'" + val.get() + "', "
+            if val.get() == 'None' or val.get() == 'None':
+                values += "NULL, "
+            else:
+                values += "'" + val.get() + "', "
         values = values[:-2]
 
         self.execute_read_query(self.controller.get_connection(),
